@@ -1,0 +1,5 @@
+bot.config
+.DS_Store
+*.pyc
+*.log
+

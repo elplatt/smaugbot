@@ -1,0 +1,12 @@
+[host]
+host = realmsofdespair.com
+port = 4000
+
+[account]
+username = mrfrodo
+password = secondbreakfast
+
+[timing]
+dwell = 30
+command_wait = 1
+sleep_wait = 150
