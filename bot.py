@@ -3,11 +3,14 @@ import logging
 from Queue import Queue, Empty
 import random
 import re
+import select
 import sys
 from telnetlib import Telnet
 from threading import Thread
 import thread
 import time
+
+logging.basicConfig(filename='bot.log',level=logging.DEBUG)
 
 config = ConfigParser()
 config.read("bot.config")
@@ -36,6 +39,7 @@ def act_args(a):
 def keyboard_daemon(keyboard_q):
     try:
         while True:
+            select.select([sys.stdin], [], [])
             line = sys.stdin.readline()
             keyboard_q.put(line)
     except KeyboardInterrupt:
@@ -44,7 +48,7 @@ def keyboard_daemon(keyboard_q):
 def output_daemon(tn, output_q):
     try:
         while True:
-            output_q.put(tn.read_very_eager())
+            output_q.put(tn.read_some())
     except KeyboardInterrupt:
         thread.interrupt_main()
     except EOFError:
@@ -268,12 +272,14 @@ class Bot(object):
             self.do("dwell_wait")
         
     def handle_dwell_wait(self, t=None):
+        now = time.time()
         if t:
             to_dwell = t
         else:
             to_dwell = self.config.getint("timing", "dwell")
-        if time.time() - self.dwell_start <= to_dwell:
+        if now - self.dwell_start <= to_dwell:
             self.do(act("dwell_wait", to_dwell))
+            time.sleep(1)
     
     def handle_sleep(self):
         self.command("sleep")
