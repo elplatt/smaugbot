@@ -155,14 +155,16 @@ class Bot(object):
             possible = [
                 "look"
             ]
+            action = random.choice(possible)
         elif type_choice == "action":
-            possible = [
-                "drink",
-                "eat",
-                "sleep",
-                "dig",
-                "search"
-            ]            
+            possible = {
+                "drink": 25,
+                "eat": 25,
+                "sleep": 25,
+                "dig": 12,
+                "search": 13
+            }            
+            action = weighted_choice(possible)
         elif type_choice == "spell":
             possible = [
                 "create_water",
@@ -178,7 +180,7 @@ class Bot(object):
                 act("cast", "protection"),
                 act("cast", "detect hidden")
             ]
-        action = random.choice(possible)
+            action = random.choice(possible)
         self.do_next("dwell", action)
 
     def handle_username(self):
@@ -321,6 +323,16 @@ class Bot(object):
 
     def silent_command(self, c):
         self.input_q.put(c + "\n")
+
+def weighted_choice(choices):
+    total = float(sum(choices.values()))
+    x = random.random()
+    sofar = 0.0
+    for choice, p in choices.iteritems():
+        sofar += float(p) / total
+        if sofar >= x:
+            return choice
+    return choice
 
 if __name__ == '__main__':
     config = ConfigParser()
