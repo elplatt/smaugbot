@@ -22,45 +22,7 @@ splash2_re = re.compile("Press \[ENTER\]")
 main_prompt = "> "
 main_prompt_re = re.compile("<\d+[^>]+>")
 exit_re = re.compile("Exits: (.*)")
-response_re = re.compile("([^\n\r]+)\n\r(.+?)\n\rExits: ([^\n\r]*)\n?\r?(.*)", re.DOTALL)
-
-def act(action, *args):
-    return tuple([action] + list(args))
-
-def act_args(a):
-    if not isinstance(a, basestring):
-        action = a[0]
-        args = a[1:]
-    else:
-        action = a
-        args = []
-    return action, args
-
-def keyboard_daemon(keyboard_q):
-    try:
-        while True:
-            select.select([sys.stdin], [], [])
-            line = sys.stdin.readline()
-            keyboard_q.put(line)
-    except KeyboardInterrupt:
-        thread.interrupt_main()
-        
-def output_daemon(tn, output_q):
-    try:
-        while True:
-            output_q.put(tn.read_some())
-    except KeyboardInterrupt:
-        thread.interrupt_main()
-    except EOFError:
-        thread.interrupt_main()
-
-def input_daemon(tn, input_q):
-    try:
-        while True:
-            data = input_q.get()
-            tn.write(data)
-    except KeyboardInterrupt:
-        thread.interrupt_main()
+location_re = re.compile("([^\n\r]+)\n\r(.+?)\n\rExits: ([^\n\r]*)\n?\r?(.*)", re.DOTALL)
 
 class Bot(object):
     
@@ -105,6 +67,8 @@ class Bot(object):
         logging.debug("Starting action_loop()")
         self.action_stack = ["username"]
         self.last_action = None
+        self.response_q = Queue()
+        self.parse_responses = False
         try:
             self.action_loop()
         except:
@@ -115,6 +79,7 @@ class Bot(object):
     def action_loop(self):
         while True:
             self.update_output()
+            self.process_responses()
             try:
                 item = self.action_stack.pop()
                 if not isinstance(item, basestring):
@@ -178,7 +143,9 @@ class Bot(object):
                 act("cast", "detect magic"),
                 act("cast", "refresh"),
                 act("cast", "protection"),
-                act("cast", "detect hidden")
+                act("cast", "detect hidden"),
+                act("cast", "float"),
+                act("cast", "summon", "dog")
             ]
             action = random.choice(possible)
         self.do_next("dwell", action)
@@ -211,6 +178,7 @@ class Bot(object):
         if re.search(splash2_re, self.recent):
             self.clear_output()
             self.command("")
+            self.parse_responses = True
         else:
             self.do("splash2")
 
@@ -231,28 +199,8 @@ class Bot(object):
         self.command("eat mushroom")
         
     def handle_parse_look(self):
-        match = re.search(main_prompt_re, self.recent)
-        if match:
-            logging.debug("Matched prompt")
-            responses = re.split(main_prompt_re, self.recent)
-            self.clear_output()
-            logging.debug("%d responses" % len(responses))
-            for response in reversed(responses):
-                response = response.strip()
-                logging.debug(response)
-                m = re.search(response_re, response)
-                if m:
-                    place, flavor, exits, objects = m.groups()
-                    self.place = place
-                    self.flavor = flavor
-                    self.exits = exits.strip().split(" ")
-                    self.objects = objects.strip().split("\n\r")
-                    logging.debug(self.place)
-                    logging.debug(self.exits)
-                    logging.debug(self.objects)
-                    self.do("random_exit")
-                    return
-            logging.debug("  No match")
+        if self.place:
+            self.do("random_exit")
         else:
             self.do("parse_look")
 
@@ -264,6 +212,10 @@ class Bot(object):
             if exit_choice[0] == "[":
                 exit_choice = exit_choice[1:-1]
                 self.command("open %s" % exit_choice)
+            self.place = None
+            self.flavor = None
+            self.exits = None
+            self.objects = None
             self.command(exit_choice)
         
     def handle_dwell(self, t=None):
@@ -291,8 +243,11 @@ class Bot(object):
     def handle_wake(self):
         self.command("wake")
     
-    def handle_cast(self, spell):
-        self.command("cast \"%s\"" % spell)
+    def handle_cast(self, spell, target=None):
+        if target:
+            self.command("cast \"%s\" \"%s\"" % (spell, target))
+        else:
+            self.command("cast \"%s\"" % spell)
 
     def handle_dig(self):
         self.command("dig")
@@ -307,6 +262,15 @@ class Bot(object):
                 self.recent += chunk
                 sys.stdout.write(chunk)
                 sys.stdout.flush()
+                if self.parse_responses:
+                    next_start = 0
+                    matches = re.finditer(main_prompt_re, self.recent)
+                    if matches:
+                        for m in matches:
+                            response = self.recent[next_start:m.start()]
+                            self.response_q.put(response.strip())
+                            next_start = m.end()
+                        self.recent = self.recent[next_start:]
         except Empty:
             pass
         
@@ -314,6 +278,24 @@ class Bot(object):
         s = self.recent
         self.recent = ""
         return s
+        
+    def process_responses(self):
+        try:
+            while True:
+                response = self.response_q.get(False)
+                logging.debug(response)
+                m = re.search(location_re, response)
+                if m:
+                    place, flavor, exits, objects = m.groups()
+                    self.place = place
+                    self.flavor = flavor
+                    self.exits = exits.strip().split(" ")
+                    self.objects = objects.strip().split("\n\r")
+                    logging.debug(self.place)
+                    logging.debug(self.exits)
+                    logging.debug(self.objects)
+        except Empty:
+            pass
     
     def command(self, c):
         logging.debug("command: %s" % c)
@@ -323,6 +305,44 @@ class Bot(object):
 
     def silent_command(self, c):
         self.input_q.put(c + "\n")
+
+def act(action, *args):
+    return tuple([action] + list(args))
+
+def act_args(a):
+    if not isinstance(a, basestring):
+        action = a[0]
+        args = a[1:]
+    else:
+        action = a
+        args = []
+    return action, args
+
+def keyboard_daemon(keyboard_q):
+    try:
+        while True:
+            select.select([sys.stdin], [], [])
+            line = sys.stdin.readline()
+            keyboard_q.put(line)
+    except KeyboardInterrupt:
+        thread.interrupt_main()
+        
+def output_daemon(tn, output_q):
+    try:
+        while True:
+            output_q.put(tn.read_some())
+    except KeyboardInterrupt:
+        thread.interrupt_main()
+    except EOFError:
+        thread.interrupt_main()
+
+def input_daemon(tn, input_q):
+    try:
+        while True:
+            data = input_q.get()
+            tn.write(data)
+    except KeyboardInterrupt:
+        thread.interrupt_main()
 
 def weighted_choice(choices):
     total = float(sum(choices.values()))
