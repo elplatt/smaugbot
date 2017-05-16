@@ -126,28 +126,31 @@ class Bot(object):
                 "drink": 25,
                 "eat": 25,
                 "sleep": 25,
-                "dig": 12,
-                "search": 13
+                "dig": 10,
+                "search": 10,
+                "climb": 5
             }            
             action = weighted_choice(possible)
         elif type_choice == "spell":
-            possible = [
-                "create_water",
-                "create_food",
-                act("cast", "armor"),
-                act("cast", "bless"),
-                act("cast", "cure light"),
-                act("cast", "cure serious"),
-                act("cast", "detect invis"),
-                act("cast", "detect evil"),
-                act("cast", "detect magic"),
-                act("cast", "refresh"),
-                act("cast", "protection"),
-                act("cast", "detect hidden"),
-                act("cast", "float"),
-                act("cast", "summon", "dog")
-            ]
-            action = random.choice(possible)
+            possible = {
+                act("cast", "create water", "waterskin"): 10,
+                act("cast", "create food"): 20,
+                act("cast", "armor"): 5,
+                act("cast", "bless"): 5,
+                act("cast", "cure light"): 5,
+                act("cast", "cure serious"): 5,
+                act("cast", "cure critical"): 5,
+                act("cast", "cure poison"): 5,
+                act("cast", "detect invis"): 5,
+                act("cast", "detect evil"): 5,
+                act("cast", "detect magic"): 5,
+                act("cast", "refresh"): 5,
+                act("cast", "protection"): 5,
+                act("cast", "detect hidden"): 5,
+                act("cast", "float"): 5,
+                act("cast", "summon", "dog"): 5
+            }
+            action = weighted_choice(possible)
         self.do_next("dwell", action)
 
     def handle_username(self):
