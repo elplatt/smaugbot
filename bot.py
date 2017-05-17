@@ -8,8 +8,6 @@ import time
 
 from BaseBot import BaseBot, act, weighted_choice
 
-logging.basicConfig(filename='bot.log',level=logging.DEBUG)
-
 class ClericBot(BaseBot):
     
     def __init__(self, config):
@@ -107,4 +105,6 @@ if __name__ == '__main__':
         config_file = "bot.config"
     config = ConfigParser()
     config.read(config_file)
+    log_file = config.get("logging", "log_file")
+    logging.basicConfig(filename=log_file,level=logging.DEBUG)
     bot = ClericBot(config)

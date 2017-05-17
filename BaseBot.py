@@ -9,6 +9,7 @@ from telnetlib import Telnet
 from threading import Thread
 import thread
 import time
+import traceback
 
 username_prompt = "By what name are you known (or \"new\" to create a new character): "
 password_prompt = "Password: "
@@ -73,10 +74,15 @@ class BaseBot(object):
         except KeyboardInterrupt:
             # Probably caugt an exception in a worker thread
             # Usually happens when connection is closed by manual quit
-            logging.debug("Caught exception: %s" % str(sys.exc_info()))
+            logging.debug("Caught exception: %s" % traceback.format_exc())
+            try:
+                while True:
+                    sys.stdout.write(self.output_q.get(False))
+            except Empty:
+                pass
             sys.exit()
         except:
-            logging.debug("Caught exception: %s" % str(sys.exc_info()))
+            logging.debug("Caught exception: %s" % traceback.format_exc())
             self.tn.write("quit\n")
             sys.exit()
     
@@ -285,7 +291,11 @@ def keyboard_daemon(keyboard_q):
 def output_daemon(tn, output_q):
     try:
         while True:
-            output_q.put(tn.read_some())
+            chunk = tn.read_some()
+            if chunk == '':
+                thread.interrupt_main()
+                return
+            output_q.put(chunk)
     except KeyboardInterrupt:
         thread.interrupt_main()
     except EOFError:
