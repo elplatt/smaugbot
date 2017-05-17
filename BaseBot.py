@@ -248,16 +248,7 @@ class BaseBot(object):
                     logging.debug(self.place)
                     logging.debug(self.exits)
                     logging.debug(self.objects)
-                if (re.search('You are a mite peckish', response) or
-                        re.search('You are hungry', response) or
-                        re.search('You are famished', response) or
-                        re.search('You are STARVING', response)):
-                    self.do_next(act("cast", "create food"), act("eat"))
-                if (re.search('You are thirsty', response) or
-                        re.search('You are DYING of thirst', response)):
-                    self.do_next(
-                        act("cast", "create water", "dragonskin"),
-                        act("drink"))
+                self.on_response(response)
         except Empty:
             pass
     
