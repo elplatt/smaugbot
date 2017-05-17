@@ -35,8 +35,7 @@ class ClericBot(BaseBot):
             action = weighted_choice(possible)
         elif type_choice == "spell":
             possible = {
-                act("cast", "create water", "dragonskin"): 10,
-                act("cast", "create food"): 0,
+                act("cast", "create spring"): 5,
                 act("cast", "armor"): 5,
                 act("cast", "bless"): 5,
                 act("cast", "cure light"): 5,
@@ -46,11 +45,17 @@ class ClericBot(BaseBot):
                 act("cast", "detect invis"): 5,
                 act("cast", "detect evil"): 5,
                 act("cast", "detect magic"): 5,
+                act("cast", "detect poison", "dragonskin"): 5,
+                act("cast", "know alignment", "self"): 5,
                 act("cast", "refresh"): 5,
                 act("cast", "protection"): 5,
                 act("cast", "detect hidden"): 5,
                 act("cast", "float"): 5,
-                act("cast", "summon", "dog"): 5
+                act("cast", "summon", "dog"): 5,
+                act("cast", "identify", "dragonskin"): 5,
+                act("cast", "minor invocation"): 5,
+                act("cast", "locate object", "club"): 5,
+                act("create_symbol"): 5
             }
             action = weighted_choice(possible)
         self.do_next("dwell", action)
@@ -70,6 +75,10 @@ class ClericBot(BaseBot):
         
     def handle_create_water(self):
         self.command("cast \"create water\" dragonskin")
+        
+    def handle_create_symbol(self):
+        self.command("cast \"create symbol\"")
+        self.command("drop symbol")
         
     def handle_drink(self):
         self.command("drink dragonskin")
