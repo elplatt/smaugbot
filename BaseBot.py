@@ -256,7 +256,7 @@ class BaseBot(object):
                 if (re.search('You are thirsty', response) or
                         re.search('You are DYING of thirst', response)):
                     self.do_next(
-                        act("cast", "create water", "waterskin"),
+                        act("cast", "create water", "dragonskin"),
                         act("drink"))
         except Empty:
             pass
