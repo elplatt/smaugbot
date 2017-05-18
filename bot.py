@@ -15,10 +15,11 @@ class ClericBot(BaseBot):
 
     def on_no_action(self):
         action_type = [
-            "move",
             "spell",
             "action" 
         ]
+        if self.follow == None:
+            action_type.append("move")
         type_choice = random.choice(action_type)
         if type_choice == "move":
             possible = [
@@ -73,6 +74,18 @@ class ClericBot(BaseBot):
                 act("cast", "create water", "dragonskin"),
                 act("drink"))
         
+    def on_tell(self, name, tell):
+        if re.match("follow", tell):
+            self.follow = name
+            self.command("tell %s Let's go! Tell me 'unfollow' to dismiss me." % name)
+            self.command('follow %s' % name)
+        elif re.match("unfollow", tell) and name == self.follow:
+            self.follow = None
+            self.command("tell %s Until next time, %s!" % (name, name))
+            self.command("follow self")
+        else:
+            self.command("tell %s Back at ya, cutie!" % name)
+
     def handle_create_water(self):
         self.command("cast \"create water\" dragonskin")
         

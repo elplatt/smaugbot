@@ -29,6 +29,7 @@ class BaseBot(object):
         self.flavor = None
         self.exits = None
         self.objects = None
+        self.follow = None
         
         # Begin process to read keyboard input
         logging.debug("Starting keyboard_daemon")
