@@ -156,6 +156,9 @@ class BaseBot(object):
             self.command('look')
     
     def handle_random_exit(self):
+        if not self.place:
+            self.do("look", "random_exit")
+            return
         if self.exits[0] == "none":
             logger.debug("No exits")
         else:

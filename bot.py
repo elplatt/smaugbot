@@ -25,7 +25,7 @@ class ClericBot(BaseBot):
         type_choice = random.choice(action_type)
         if type_choice == "move":
             possible = [
-                "look"
+                "random_exit"
             ]
             action = random.choice(possible)
         elif type_choice == "action":
@@ -113,15 +113,6 @@ class ClericBot(BaseBot):
         
     def handle_eat(self):
         self.command("eat mushroom")
-        
-    def handle_parse_look(self):
-        try:
-            if self.place:
-                self.do("random_exit")
-            else:
-                self.do("parse_look")
-        except AttributeError:
-            self.do("parse_look")
 
     def handle_dig(self):
         self.command("dig")
