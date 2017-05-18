@@ -72,7 +72,7 @@ class ClericBot(BaseBot):
                 re.search('You are famished', response) or
                 re.search('You are STARVING', response)):
             self.do_now(act("cast", "create food"), act("eat"))
-        if (re.search("You could use a sip of something refreshing") or
+        if (re.search("You could use a sip of something refreshing", response) or
                 re.search('You are thirsty', response) or
                 re.search('You are parched', response) or
                 re.search('You are DYING of THIRST', response)):
