@@ -188,8 +188,9 @@ class BaseBot(object):
     
     def handle_sleep(self):
         self.command("sleep")
-        self.do("wake")
-        self.do(act("dwell_wait", self.config.getint("timing", "sleep_wait")))
+        self.do(
+            act("dwell_wait", self.config.getint("timing", "sleep_wait")),
+            act("wake"))
         
     def handle_wake(self):
         self.command("wake")
