@@ -82,7 +82,7 @@ class ClericBot(BaseBot):
             self.follow = None
             self.command('follow self')
         m = re.search('(.+) collapses into a deep sleep', response) 
-        if m and m.groups[0] == self.follow:
+        if m and m.groups()[0] == self.follow:
             self.do('sleep')
         
     def on_tell(self, name, tell):
