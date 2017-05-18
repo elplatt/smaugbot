@@ -80,6 +80,10 @@ class ClericBot(BaseBot):
                 act("drink"))
         if re.search('You do not see that here', response):
             self.follow = None
+            self.command('follow self')
+        m = re.search('(.+) collapses into a deep sleep', response) 
+        if m and m.groups[0] == self.follow:
+            self.do('sleep')
         
     def on_tell(self, name, tell):
         if re.match("follow", tell):
