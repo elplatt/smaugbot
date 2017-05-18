@@ -58,18 +58,18 @@ class ClericBot(BaseBot):
                 act("create_symbol"): 5
             }
             action = weighted_choice(possible)
-        self.do_next("dwell", action)
+        self.do_now("dwell", action)
 
     def on_response(self, response):
         if (re.search('You are a mite peckish', response) or
                 re.search('You are hungry', response) or
                 re.search('You are famished', response) or
                 re.search('You are STARVING', response)):
-            self.do_next(act("cast", "create food"), act("eat"))
+            self.do_now(act("cast", "create food"), act("eat"))
         if (re.search('You are thirsty', response) or
                 re.search('You are parched', response) or
                 re.search('You are DYING of THIRST', response)):
-            self.do_next(
+            self.do_now(
                 act("cast", "create water", "dragonskin"),
                 act("drink"))
         

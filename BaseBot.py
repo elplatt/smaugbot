@@ -65,7 +65,7 @@ class BaseBot(object):
         self.input_d.start()
         
         logging.debug("Starting action_loop()")
-        self.action_stack = ["username"]
+        self.action_deque = ["username"]
         self.last_action = None
         self.response_q = Queue()
         self.parse_responses = False
@@ -91,7 +91,7 @@ class BaseBot(object):
             self.update_output()
             self.process_responses()
             try:
-                item = self.action_stack.pop()
+                item = self.action_deque.pop()
                 if not isinstance(item, basestring):
                     action = item[0]
                     args = item[1:]
@@ -109,7 +109,7 @@ class BaseBot(object):
             time.sleep(0)
 
     def on_no_action(self):
-        self.do_next("dwell", "random_exit")
+        self.do_now("dwell", "random_exit")
 
     def handle_username(self):
         if self.recent.endswith(username_prompt):
@@ -181,7 +181,7 @@ class BaseBot(object):
     def handle_sleep(self):
         self.command("sleep")
         self.do("wake")
-        self.do("dwell_wait", self.config.getint("timing", "sleep_wait"))
+        self.do(act("dwell_wait", self.config.getint("timing", "sleep_wait")))
         
     def handle_wake(self):
         self.command("wake")
@@ -192,16 +192,15 @@ class BaseBot(object):
         else:
             self.command("cast \"%s\"" % spell)
 
-    def do(self, action, *args):
-        if len(args) > 0:
-            item = tuple([action] + list(args))
-            self.action_stack.append(item)
-        else:
-            self.action_stack.append(action)
+    def do(self, *args):
+        '''Add actions to action queue.'''
+        for arg in args:
+            self.action_deque.insert(0, arg)
         
-    def do_next(self, *args):
+    def do_now(self, *args):
+        '''Add actions to front of action queue.'''
         for arg in reversed(args):
-            self.action_stack.append(arg)
+            self.action_deque.append(arg)
 
     def update_output(self):
         try:
