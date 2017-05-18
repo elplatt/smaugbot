@@ -78,7 +78,7 @@ class ClericBot(BaseBot):
             self.do_now(
                 act("cast", "create water", "dragonskin"),
                 act("drink"))
-        if (re.search('You do not see that here')):
+        if re.search('You do not see that here', response):
             self.follow = None
         
     def on_tell(self, name, tell):
