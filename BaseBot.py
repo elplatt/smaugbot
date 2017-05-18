@@ -148,10 +148,13 @@ class BaseBot(object):
         else:
             self.do("splash2")
 
-    def handle_look(self):
-        self.command("look")
-        self.do("parse_look")
-        
+    def handle_look(self, target=None):
+        if target:
+            self.command("look %s" % target)
+            self.look_target = target
+        else:
+            self.command('look')
+    
     def handle_random_exit(self):
         if self.exits[0] == "none":
             logger.debug("No exits")

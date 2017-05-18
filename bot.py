@@ -127,10 +127,6 @@ class ClericBot(BaseBot):
     def handle_climb(self):
         self.command("climb")
     
-    def handle_look(self, target):
-        self.command("look %s" % target)
-        self.look_target = target
-    
 if __name__ == '__main__':
     try:
         config_file = sys.argv[1]
