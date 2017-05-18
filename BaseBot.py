@@ -111,6 +111,9 @@ class BaseBot(object):
     def on_no_action(self):
         self.do_now("dwell", "random_exit")
 
+    def on_tell(self, name, tell):
+        self.command("tell %s Back at ya, cutie!" % name)
+
     def handle_username(self):
         if self.recent.endswith(username_prompt):
             self.do("password")
@@ -253,6 +256,10 @@ class BaseBot(object):
                     logging.debug(self.place)
                     logging.debug(self.exits)
                     logging.debug(self.objects)
+                m = re.search("(\w+) tells you \'(.+)\'", response)
+                if m:
+                    name, tell = m.groups()
+                    self.on_tell(name, tell)
                 self.on_response(response)
         except Empty:
             pass
