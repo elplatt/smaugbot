@@ -14,6 +14,8 @@ class ClericBot(BaseBot):
         super(ClericBot, self).__init__(config)
 
     def on_no_action(self):
+        if self.following:
+            self.do(act("look", self.target))
         action_type = [
             "spell",
             "action" 
@@ -76,6 +78,8 @@ class ClericBot(BaseBot):
             self.do_now(
                 act("cast", "create water", "dragonskin"),
                 act("drink"))
+        if (re.search('You do not see that here')):
+            self.follow = None
         
     def on_tell(self, name, tell):
         if re.match("follow", tell):
@@ -122,6 +126,10 @@ class ClericBot(BaseBot):
     
     def handle_climb(self):
         self.command("climb")
+    
+    def handle_look(self, target):
+        self.command("look %s" % target)
+        self.look_target = target
     
 if __name__ == '__main__':
     try:
