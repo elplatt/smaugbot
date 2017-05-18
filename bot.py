@@ -14,7 +14,7 @@ class ClericBot(BaseBot):
         super(ClericBot, self).__init__(config)
 
     def on_no_action(self):
-        if self.following:
+        if self.follow:
             self.do(act("look", self.target))
         action_type = [
             "spell",
