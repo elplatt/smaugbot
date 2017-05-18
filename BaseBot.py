@@ -186,7 +186,7 @@ class BaseBot(object):
         else:
             to_dwell = self.config.getint("timing", "dwell")
         if now - self.dwell_start <= to_dwell:
-            self.do(act("dwell_wait", to_dwell))
+            self.do_now(act("dwell_wait", to_dwell))
             time.sleep(1)
     
     def handle_sleep(self):
