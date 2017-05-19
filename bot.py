@@ -21,7 +21,7 @@ class ClericBot(BaseBot):
             self.do(act("look", self.follow))
             self.do(act("cast", random.choice(self.level_spells), self.follow))
             self.do(act("cast", random.choice(self.level_self_spells)))
-            self.do("dwell", action)
+            self.do(act("dwell"))
         else:
             action_type = [
                 "spell",
