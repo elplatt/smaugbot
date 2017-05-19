@@ -30,6 +30,7 @@ class BaseBot(object):
         self.exits = None
         self.objects = None
         self.follow = None
+        self.sleep = False
         
         # Begin process to read keyboard input
         logging.debug("Starting keyboard_daemon")
@@ -190,12 +191,14 @@ class BaseBot(object):
             time.sleep(1)
     
     def handle_sleep(self):
+        self.sleep = True
         self.command("sleep")
         self.do(
             act("dwell_wait", self.config.getint("timing", "sleep_wait")),
             act("wake"))
         
     def handle_wake(self):
+        self.sleep = False
         self.command("wake")
     
     def handle_cast(self, spell, target=None):

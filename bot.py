@@ -14,7 +14,7 @@ class ClericBot(BaseBot):
         super(ClericBot, self).__init__(config)
 
     def on_no_action(self):
-        if self.follow:
+        if self.follow and not self.sleep:
             self.do(act("look", self.follow))
         action_type = [
             "spell",
@@ -30,11 +30,12 @@ class ClericBot(BaseBot):
             action = random.choice(possible)
         elif type_choice == "action":
             possible = {
-                "sleep": 25,
                 "dig": 25,
                 "search": 25,
                 "climb": 25
-            }            
+            }
+            if not self.follow:
+                possible["sleep"] = 25
             action = weighted_choice(possible)
         elif type_choice == "spell":
             possible = {
@@ -85,6 +86,20 @@ class ClericBot(BaseBot):
         m = re.search('(.+) collapses into a deep sleep', response) 
         if m and m.groups()[0] == self.follow:
             self.do('sleep')
+        if self.follow:
+            look_re = "%s .+?\n\r\n\r%s (.+?)\n\r\n\r" % (
+                self.follow, self.follow)
+            m = re.search(look_re, response, re.DOTALL)
+            if m:
+                health, = m.groups()
+                if health != "is in perfect health.":
+                    self.do(act("cast", "cure serious", self.follow))
+            if False:
+                "is slightly scratched."
+                "has a few bruises."
+                "has some cuts."
+        if False:
+            "A (.+) is here, fighting YOU!"
         
     def on_tell(self, name, tell):
         if re.match("follow", tell):
