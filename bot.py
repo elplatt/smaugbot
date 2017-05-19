@@ -11,10 +11,10 @@ from BaseBot import BaseBot, act, weighted_choice
 class ClericBot(BaseBot):
     
     def __init__(self, config):
+        super(ClericBot, self).__init__(config)
         self.level_spells = self.config.get("spells", "level").split(",")
         self.level_self_spells = self.config.get("spells", "level_self").split(",")
         self.attack_spells = self.config.get("spells", "attack").split(",")
-        super(ClericBot, self).__init__(config)
 
     def on_no_action(self):
         if self.follow and not self.sleep:
