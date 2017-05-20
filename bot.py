@@ -126,10 +126,10 @@ class ClericBot(BaseBot):
                 self.do(act("cast", "cure critical", self.follow))
             else:
                 self.do(act("cast", "cure critical", self.follow))
-        m = re.match("A (.+) (?:misses|batters|bludgeons|mauls|pummels|smashes|thrashes|flogs|_demolishes_|_maims_|_traumatizes_|MUTILATES) you", response)
+        m = re.search("A (.+) (?:misses|batters|bludgeons|mauls|pummels|smashes|thrashes|flogs|_demolishes_|_maims_|_traumatizes_|MUTILATES) you", response)
         if m:
             self.fighting = m.groups()[0]
-        m = re.match("A (.+) (?:misses|batters|bludgeons|mauls|pummels|smashes|thrashes|flogs|_demolishes_|_maims_|_traumatizes_|MUTILATES) %s" % self.follow, response)
+        m = re.search("A (.+) (?:misses|batters|bludgeons|mauls|pummels|smashes|thrashes|flogs|_demolishes_|_maims_|_traumatizes_|MUTILATES) %s" % self.follow, response)
         if m:
             self.fighting = m.groups()[0]
         
