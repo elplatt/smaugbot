@@ -17,7 +17,7 @@ class ClericBot(BaseBot):
         super(ClericBot, self).__init__(config)
 
     def on_no_action(self):
-        logging.debug("Following: %s" % self.following)
+        logging.debug("Following: %s" % self.follow)
         logging.debug("Fighting: %s" % self.fighting)
         if self.follow and not self.sleep:
             if self.fighting:
