@@ -31,6 +31,7 @@ class BaseBot(object):
         self.objects = None
         self.follow = None
         self.sleep = False
+        self.fighting = None
         
         # Begin process to read keyboard input
         logging.debug("Starting keyboard_daemon")
