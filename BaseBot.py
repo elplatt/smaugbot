@@ -114,7 +114,6 @@ class BaseBot(object):
     def on_no_action(self):
         self.do_now("dwell", "random_exit")
 
-
     def on_tell(self, name, tell):
         self.command("tell %s Back at ya, cutie!" % name)
 
