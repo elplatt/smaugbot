@@ -131,9 +131,11 @@ class ClericBot(BaseBot):
         m = re.search("A (.+) (?:misses|batters|bludgeons|mauls|pummels|smashes|thrashes|flogs|_demolishes_|_maims_|_traumatizes_|MUTILATES) you", response)
         if m:
             self.fighting = m.groups()[0]
+            self.do_now(act("dwell", 0))
         m = re.search("A (.+) (?:misses|batters|bludgeons|mauls|pummels|smashes|thrashes|flogs|_demolishes_|_maims_|_traumatizes_|MUTILATES) %s" % self.follow, response)
         if m:
             self.fighting = m.groups()[0]
+            self.do_now(act("dwell", 0))
         
     def on_tell(self, name, tell):
         if re.match("follow", tell):

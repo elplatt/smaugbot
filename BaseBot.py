@@ -178,7 +178,7 @@ class BaseBot(object):
         if t:
             if t == 0:
                 # Cancel dwell
-                pass
+                self.dwell_start = 0
             else:
                 self.do(act("dwell_wait", t))
         else:
