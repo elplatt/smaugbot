@@ -18,10 +18,14 @@ class ClericBot(BaseBot):
 
     def on_no_action(self):
         if self.follow and not self.sleep:
-            self.do(act("look", self.follow))
-            self.do(act("cast", random.choice(self.level_spells), self.follow))
-            self.do(act("cast", random.choice(self.level_self_spells)))
-            self.do(act("dwell"))
+            if self.fighting:
+                self.do(act("look", self.follow))
+                self.do(act("cast", random.choice(self.attack_spells), self.fighting))
+            else:
+                self.do(act("look", self.follow))
+                self.do(act("cast", random.choice(self.level_spells), self.follow))
+                self.do(act("cast", random.choice(self.level_self_spells)))
+                self.do(act("dwell"))
         else:
             action_type = [
                 "spell",
@@ -96,27 +100,37 @@ class ClericBot(BaseBot):
     
     def on_response_follow(self, response):
         if re.search('You do not see that here', response):
-            self.follow = None
-            self.command('follow self')
+            if self.last_target == self.follow:
+                self.follow = None
+                self.command('follow self')
+            if self.last_target == self.fighting:
+                self.fighting = None
         m = re.search('(.+) collapses into a deep sleep', response) 
         if m and m.groups()[0] == self.follow:
-            self.do(act('sleep', self.config.getint("timing", "sleep_wait")/2))
-        if self.follow:
-            look_re = "%s .+?\n\r\n\r%s (.+?)\n\r\n\r" % (
-                self.follow, self.follow)
-            m = re.search(look_re, response, re.DOTALL)
-            if m:
-                health, = m.groups()
-                if health == "is in perfect health.":
-                    pass
-                elif health == "is slightly scratched.":
-                    pass
-                elif health == "has a few bruises.":
-                    pass
-                elif health == "has some cuts.":
-                    self.do(act("cast", "cure critical", self.follow))
-                else:
-                    self.do(act("cast", "cure critical", self.follow))
+            self.do(
+                act('dwell', 0),
+                act('sleep', self.config.getint("timing", "sleep_wait")/2))
+        look_re = "%s .+?\n\r\n\r%s (.+?)\n\r\n\r" % (
+            self.follow, self.follow)
+        m = re.search(look_re, response, re.DOTALL)
+        if m:
+            health, = m.groups()
+            if health == "is in perfect health.":
+                pass
+            elif health == "is slightly scratched.":
+                pass
+            elif health == "has a few bruises.":
+                pass
+            elif health == "has some cuts.":
+                self.do(act("cast", "cure critical", self.follow))
+            else:
+                self.do(act("cast", "cure critical", self.follow))
+        m = re.match("A (.+) (?:misses|batters|bludgeons|mauls|pummels|smashes|thrashes|flogs|_demolishes_|_maims_|_traumatizes_|MUTILATES) you", response)
+        if m:
+            self.fighting = m.groups()[0]
+        m = re.match("A (.+) (?:misses|batters|bludgeons|mauls|pummels|smashes|thrashes|flogs|_demolishes_|_maims_|_traumatizes_|MUTILATES) %s" % self.follow, response)
+        if m:
+            self.fighting = m.groups()[0]
         
     def on_tell(self, name, tell):
         if re.match("follow", tell):

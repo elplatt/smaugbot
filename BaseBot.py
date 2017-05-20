@@ -152,7 +152,7 @@ class BaseBot(object):
     def handle_look(self, target=None):
         if target:
             self.command("look %s" % target)
-            self.look_target = target
+            self.last_target = target
         else:
             self.command('look')
     
@@ -176,7 +176,11 @@ class BaseBot(object):
     def handle_dwell(self, t=None):
         self.dwell_start = time.time()
         if t:
-            self.do(act("dwell_wait", t))
+            if t == 0:
+                # Cancel dwell
+                pass
+            else:
+                self.do(act("dwell_wait", t))
         else:
             self.do("dwell_wait")
         
@@ -205,6 +209,7 @@ class BaseBot(object):
     
     def handle_cast(self, spell, target=None):
         if target:
+            self.last_target = target
             self.command("cast \"%s\" \"%s\"" % (spell, target))
         else:
             self.command("cast \"%s\"" % spell)
