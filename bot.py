@@ -99,7 +99,8 @@ class ClericBot(BaseBot):
             "A .*(\w+) is here, fighting YOU!"
     
     def on_response_follow(self, response):
-        if re.search('You do not see that here', response):
+        if (re.search('You do not see that here', response)
+            or re.search("They aren't here")):
             if self.last_target == self.follow:
                 self.follow = None
                 self.command('follow self')
