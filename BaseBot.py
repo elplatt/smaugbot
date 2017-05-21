@@ -19,6 +19,26 @@ main_prompt = "> "
 main_prompt_re = re.compile("<(\d+)/(\d+)hp (\d+)/(\d+)m (\d+)/(\d+)mv ([0-9,]+)to level>")
 exit_re = re.compile("Exits: (.*)")
 location_re = re.compile("([^\n\r]+)\n\r(.+?)\n\rExits: ([^\n\r]*)\n?\r?(.*)", re.DOTALL)
+opponent_re = re.compile("<A (.+?): (.+?)>")
+damage_names = [
+    "batters",
+    "bludgeons",
+    "brushes",
+    "decimates",
+    "grazes",
+    "injurs",
+    "mauls",
+    "misses",
+    "MUTILATES"
+    "pummels",
+    "scratches",
+    "smashes",
+    "thrashes",
+    "flogs",
+    "_demolishes_",
+    "_maims_",
+    "_traumatizes_",
+]
 
 class BaseBot(object):
     
@@ -32,6 +52,10 @@ class BaseBot(object):
         self.follow = None
         self.sleep = False
         self.fighting = None
+        self.last_target = None
+        self.last_consider = None
+        self.true_name = {}
+        self.check_name_waiting = False
         
         # Begin process to read keyboard input
         logging.debug("Starting keyboard_daemon")
@@ -156,6 +180,9 @@ class BaseBot(object):
         else:
             self.command('look')
     
+    def handle_wear(self, target):
+        self.command("wear %s" % target)
+    
     def handle_random_exit(self):
         if not self.place:
             self.do("look", "random_exit")
@@ -214,6 +241,26 @@ class BaseBot(object):
         else:
             self.command("cast \"%s\"" % spell)
 
+    def handle_check_name(self, parts, full):
+        logging.debug("check_name")
+        if full not in self.true_name:
+            p = parts.pop()
+            logging.debug("  %s" % p)
+            self.command("consider %s" % p)
+            self.check_name_waiting = True
+            self.check_name_part = p
+            self.check_name_full = full
+            self.do_now(act('check_name_wait', parts, full))
+    
+    def handle_check_name_wait(self, parts, full):
+        logging.debug("check_name_wait")
+        if self.check_name_waiting:
+            self.do_now(act('check_name_wait', parts, full))
+            time.sleep(0)
+        else:
+            if full not in self.true_name and len(parts) > 0:
+                self.do_now('check_name', parts, full)
+
     def do(self, *args):
         '''Add actions to action queue.'''
         for arg in args:
@@ -265,6 +312,19 @@ class BaseBot(object):
             while True:
                 response = self.response_q.get(False)
                 logging.debug(response)
+                # Responses to checking names
+                if self.check_name_waiting:
+                    logging.debug("  Checking for consider response")
+                    if re.search("They're not here", response):
+                        logging.debug("  Found response: not here")
+                        self.check_name_waiting = False
+                        continue
+                    if re.search(".+experience.+you\.\n\r.+(weaker|stronger|same).+you\.", response):
+                        logging.debug("  Found response: here")
+                        self.check_name_waiting = False
+                        self.true_name[self.check_name_full] = self.check_name_part
+                        continue
+                # Get location details
                 m = re.search(location_re, response)
                 if m:
                     place, flavor, exits, objects = m.groups()
@@ -280,9 +340,35 @@ class BaseBot(object):
                     name, tell = m.groups()
                     if tell != "Back at ya, cutie!":
                         self.on_tell(name, tell)
+                # Check for primary opponent
+                m = opponent_re.search(response)
+                if m:
+                    opponent, health = m.groups()
+                    if opponent in self.true_name:
+                        logging.debug("True name: %s : %s" % (opponent, self.true_name[opponent]))
+                        opponent = self.true_name[opponent]
+                    if not self.fighting or opponent != self.fighting:
+                        self.fighting = opponent
+                        self.on_fight_start()
+                # Check if we've taken damage
+                m = re.search("A (.+) (%s) you" % "|".join(damage_names),
+                    response)
+                if m:
+                    opponent, damage = m.groups()
+                    self.on_damage(damage)
                 self.on_response(response)
         except Empty:
             pass
+    
+    def on_damage(self, damage):
+        pass
+    
+    def on_fight_start(self):
+        logging.debug("Fight started! %s" % self.fighting)
+        parts = self.fighting.split(" ")
+        if len(parts) > 1:
+            self.do_now(
+                act("check_name", parts, self.fighting))
     
     def command(self, c):
         logging.debug("command: %s" % c)

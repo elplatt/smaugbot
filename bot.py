@@ -19,66 +19,72 @@ class ClericBot(BaseBot):
     def on_no_action(self):
         logging.debug("Following: %s" % self.follow)
         logging.debug("Fighting: %s" % self.fighting)
-        if self.follow and not self.sleep:
-            if self.fighting:
+        if self.fighting:
+            if self.hp < self.hp_total * 0.75:
+                self.do(act("cast", "cure critical"))
+            self.do(act("cast", random.choice(self.attack_spells), self.fighting))
+            if self.follow:
                 self.do(act("look", self.follow))
-                self.do(act("cast", random.choice(self.attack_spells), self.fighting))
-            else:
-                self.do(act("look", self.follow))
-                self.do(act("cast", random.choice(self.level_spells), self.follow))
-                self.do(act("cast", random.choice(self.level_self_spells)))
-                self.do(act("dwell"))
         else:
-            action_type = [
-                "spell",
-                "action" 
-            ]
-            if self.follow == None:
-                action_type.append("move")
-            type_choice = random.choice(action_type)
-            if type_choice == "move":
-                possible = [
-                    "random_exit"
-                ]
-                action = random.choice(possible)
-            elif type_choice == "action":
-                possible = {
-                    "dig": 25,
-                    "search": 25,
-                    "climb": 25
-                }
-                if not self.follow:
-                    possible["sleep"] = 25
-                action = weighted_choice(possible)
-            elif type_choice == "spell":
-                possible = {
-                    act("cast", "create spring"): 5,
-                    act("cast", "armor"): 5,
-                    act("cast", "bless"): 5,
-                    act("cast", "cure light"): 5,
-                    act("cast", "cure serious"): 5,
-                    act("cast", "cure critical"): 5,
-                    act("cast", "cure poison"): 5,
-                    act("cast", "remove hex", "self"): 5,
-                    act("cast", "remove curse", "self"): 5,
-                    act("cast", "detect invis"): 5,
-                    act("cast", "detect evil"): 5,
-                    act("cast", "detect magic"): 5,
-                    act("cast", "detect poison", "dragonskin"): 5,
-                    act("cast", "know alignment", "self"): 5,
-                    act("cast", "refresh"): 5,
-                    act("cast", "protection"): 5,
-                    act("cast", "detect hidden"): 5,
-                    act("cast", "float"): 5,
-                    act("cast", "fly"): 5,
-                    act("cast", "summon", "dog"): 5,
-                    act("cast", "identify", "dragonskin"): 5,
-                    act("cast", "minor invocation"): 5,
-                    act("cast", "locate object", "club"): 5,
-                    act("create_symbol"): 5
-                }
-                action = weighted_choice(possible)
-            self.do("dwell", action)
+            if self.sleep:
+                pass
+            else:
+                if self.follow:
+                    self.do(act("look", self.follow))
+                    self.do(act("cast", random.choice(self.level_spells), self.follow))
+                    self.do(act("cast", random.choice(self.level_self_spells)))
+                    self.do(act("dwell"))
+                else:
+                    action_type = [
+                        "spell",
+                        "action" 
+                    ]
+                    if self.follow == None:
+                        action_type.append("move")
+                    type_choice = random.choice(action_type)
+                    if type_choice == "move":
+                        possible = [
+                            "random_exit"
+                        ]
+                        action = random.choice(possible)
+                    elif type_choice == "action":
+                        possible = {
+                            "dig": 25,
+                            "search": 25,
+                            "climb": 25
+                        }
+                        if not self.follow:
+                            possible["sleep"] = 25
+                        action = weighted_choice(possible)
+                    elif type_choice == "spell":
+                        possible = {
+                            act("cast", "create spring"): 5,
+                            act("cast", "armor"): 5,
+                            act("cast", "bless"): 5,
+                            act("cast", "cure light"): 5,
+                            act("cast", "cure serious"): 5,
+                            act("cast", "cure critical"): 5,
+                            act("cast", "cure poison"): 5,
+                            act("cast", "remove hex", "self"): 5,
+                            act("cast", "remove curse", "self"): 5,
+                            act("cast", "detect invis"): 5,
+                            act("cast", "detect evil"): 5,
+                            act("cast", "detect magic"): 5,
+                            act("cast", "detect poison", "dragonskin"): 5,
+                            act("cast", "know alignment", "self"): 5,
+                            act("cast", "refresh"): 5,
+                            act("cast", "protection"): 5,
+                            act("cast", "detect hidden"): 5,
+                            act("cast", "float"): 5,
+                            act("cast", "fly"): 5,
+                            act("cast", "summon", "dog"): 5,
+                            act("cast", "identify", "dragonskin"): 5,
+                            act("cast", "minor invocation"): 5,
+                            act("cast", "locate object", "club"): 5,
+                            act("create_symbol"): 5
+                        }
+                        action = weighted_choice(possible)
+                    self.do("dwell", action)
 
     def on_response(self, response):
         # Take care of food and water
@@ -95,6 +101,14 @@ class ClericBot(BaseBot):
                 self.do_now(
                     act("cast", "create water", "dragonskin"),
                     act("drink"))
+            if (re.search("It is pitch black", response)):
+                self.do_now(
+                    act("cast", "continual light"),
+                    act("wear", "ball")
+                )
+        if re.search("They aren't here", response):
+            if self.last_target == self.fighting:
+                self.fighting = None
         if self.follow:
             self.on_response_follow(response)
         if False:
@@ -128,14 +142,6 @@ class ClericBot(BaseBot):
                 self.do(act("cast", "cure critical", self.follow))
             else:
                 self.do(act("cast", "cure critical", self.follow))
-        m = re.search("A (.+) (?:misses|batters|bludgeons|mauls|pummels|smashes|thrashes|flogs|_demolishes_|_maims_|_traumatizes_|MUTILATES) you", response)
-        if m:
-            self.fighting = m.groups()[0]
-            self.do_now(act("dwell", 0))
-        m = re.search("A (.+) (?:misses|batters|bludgeons|mauls|pummels|smashes|thrashes|flogs|_demolishes_|_maims_|_traumatizes_|MUTILATES) %s" % self.follow, response)
-        if m:
-            self.fighting = m.groups()[0]
-            self.do_now(act("dwell", 0))
         
     def on_tell(self, name, tell):
         if re.match("follow", tell):
