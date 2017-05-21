@@ -61,6 +61,7 @@ class ClericBot(BaseBot):
                             act("cast", "create spring"): 5,
                             act("cast", "armor"): 5,
                             act("cast", "bless"): 5,
+                            act("cast", "sanctuary"): 5,
                             act("cast", "cure light"): 5,
                             act("cast", "cure serious"): 5,
                             act("cast", "cure critical"): 5,
